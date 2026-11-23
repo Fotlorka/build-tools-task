@@ -34,4 +34,34 @@ tasks.withType<KotlinCompile> {
 }
 
 
-// TODO: your code starts here
+
+val npmInstall by tasks.registering(Exec::class) {
+    workingDir("ui")
+    commandLine("cmd", "/c", "npm", "i")
+}
+
+val compileUi by tasks.registering(Exec::class) {
+    workingDir("ui")
+    commandLine("cmd", "/c", "npm", "run", "build")
+    dependsOn(npmInstall)
+}
+
+val copyUi by tasks.registering(Copy::class) {
+    dependsOn(compileUi)
+
+    from("ui/dist/index.html")
+    from("ui/dist/app.js")
+    from("ui/dist/css") {
+        into("css")
+    }
+
+    into("src/main/resources")
+}
+
+tasks.named("processResources") {
+    dependsOn(copyUi)
+}
+
+tasks.withType<org.springframework.boot.gradle.tasks.run.BootRun> {
+    dependsOn(copyUi)
+}
